@@ -46,10 +46,10 @@ function startGame() {
     
     currentNumberEl.innerText = "?";
     // Reset classes to base text classes
-    currentNumberEl.className = "text-8xl font-extrabold text-white transition-all duration-200";
+    currentNumberEl.className = "text-[120px] font-extrabold text-white transition-all duration-300 drop-shadow-2xl";
     
-    displayRing.classList.remove('border-neon-green', 'shadow-[0_0_30px_rgba(57,255,20,0.3),inset_0_0_20px_rgba(0,0,0,0.5)]');
-    displayRing.classList.add('border-text-dim');
+    displayRing.classList.remove('border-accent-start/50', 'shadow-glow-accent', 'scale-[1.05]');
+    displayRing.classList.add('border-white/5');
     
     updateRemaining();
     
@@ -80,11 +80,11 @@ function drawNumber() {
     drawBtn.disabled = true;
     
     // Reset ring highlight
-    displayRing.classList.remove('border-neon-green', 'shadow-[0_0_30px_rgba(57,255,20,0.3),inset_0_0_20px_rgba(0,0,0,0.5)]');
-    displayRing.classList.add('border-text-dim');
+    displayRing.classList.remove('border-accent-start/50', 'shadow-glow-accent', 'scale-[1.05]');
+    displayRing.classList.add('border-white/5');
     
-    currentNumberEl.classList.remove('animate-pop-in', 'text-neon-green');
-    currentNumberEl.classList.add('text-text-dim', 'blur-[2px]', 'text-6xl');
+    currentNumberEl.classList.remove('animate-pop-in', 'text-gradient');
+    currentNumberEl.classList.add('text-text-dim', 'blur-[4px]', 'scale-75');
 
     // Slot Machine Animation Effect
     let shuffleInterval = setInterval(() => {
@@ -100,14 +100,14 @@ function drawNumber() {
         const finalNumber = availableNumbers.pop();
         
         // UI Updates
-        currentNumberEl.classList.remove('text-text-dim', 'blur-[2px]', 'text-6xl');
+        currentNumberEl.classList.remove('text-text-dim', 'blur-[4px]', 'scale-75');
         currentNumberEl.innerText = finalNumber;
-        currentNumberEl.classList.add('animate-pop-in', 'text-neon-green');
+        currentNumberEl.classList.add('animate-pop-in', 'text-gradient');
         
-        displayRing.classList.remove('border-text-dim');
-        displayRing.classList.add('border-neon-green', 'shadow-[0_0_30px_rgba(57,255,20,0.3),inset_0_0_20px_rgba(0,0,0,0.5)]');
+        displayRing.classList.remove('border-white/5');
+        displayRing.classList.add('border-accent-start/50', 'shadow-glow-accent', 'scale-[1.05]');
 
-        if (navigator.vibrate) navigator.vibrate(200);
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
 
         // Add to history store
         const playerIndex = totalPlayers - availableNumbers.length; 
@@ -137,7 +137,7 @@ function drawNumber() {
         
         isAnimating = false;
 
-    }, 600);
+    }, 800);
 }
 
 function updateRemaining() {
@@ -151,11 +151,11 @@ function clearHistoryUI() {
 // Renders a single history item to the top of the list
 function renderHistoryItem(item) {
     const li = document.createElement('li');
-    li.className = 'bg-cricket-card px-2.5 py-1 rounded-md text-sm border border-white/10 flex items-center animate-fade-in';
+    li.className = 'bg-white/5 px-4 py-2 rounded-xl text-sm border border-white/10 flex items-center animate-fade-in shadow-sm hover:border-white/20 transition-all';
     
     // Editable Name
     const nameSpan = document.createElement('span');
-    nameSpan.className = 'text-text-dim border-b border-dashed border-white/30 mr-[2px] px-1 py-[2px] outline-none cursor-text transition-all focus:bg-white/10 focus:text-white focus:border-neon-green focus:rounded';
+    nameSpan.className = 'text-text-dim border-b border-dashed border-white/20 mr-1.5 px-1 py-0.5 outline-none cursor-text transition-all focus:bg-white/10 focus:text-white focus:border-accent-mid focus:rounded-md';
     nameSpan.contentEditable = true;
     nameSpan.spellcheck = false;
     nameSpan.innerText = item.name;
@@ -177,8 +177,8 @@ function renderHistoryItem(item) {
 
     // Number
     const numSpan = document.createElement('span');
-    numSpan.className = 'text-neon-green font-bold ml-[2px]';
-    numSpan.textContent = `: ${item.number}`;
+    numSpan.className = 'text-[#fcd34d] font-bold';
+    numSpan.textContent = ` #${item.number}`;
 
     li.appendChild(nameSpan);
     li.appendChild(numSpan);
@@ -188,7 +188,7 @@ function renderHistoryItem(item) {
 }
 
 function resetGame() {
-    if(confirm("Start a new innings? Current progress will be lost.")) {
+    if(confirm("Are you sure you want to reset the current match?")) {
         // Clear State
         localStorage.removeItem(STORAGE_KEY);
         availableNumbers = [];
@@ -202,11 +202,7 @@ function resetGame() {
         setupScreen.classList.add('flex');
         
         // Stop confetti if running
-        const canvas = document.getElementById("confetti-canvas");
-        if (canvas) {
-            const ctx = canvas.getContext("2d");
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
+        clearConfetti();
     }
 }
 
@@ -270,6 +266,7 @@ function loadState() {
 // --- Simple Confetti Logic (Canvas) ---
 function clearConfetti() {
     const canvas = document.getElementById("confetti-canvas");
+    if(!canvas) return;
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
@@ -277,29 +274,30 @@ function clearConfetti() {
 function startConfetti() {
     const canvas = document.getElementById("confetti-canvas");
     const ctx = canvas.getContext("2d");
+    if(!canvas) return;
+    
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
     const particles = [];
-    const colors = ['#39ff14', '#dc2626', '#ffffff', '#fbbf24'];
+    // Golden theme colors
+    const colors = ['#f59e0b', '#fcd34d', '#fef9c3', '#ffffff', '#ef4444'];
 
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 120; i++) {
         particles.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height - canvas.height,
             vx: Math.random() * 4 - 2,
-            vy: Math.random() * 4 + 2,
+            vy: Math.random() * 4 + 3,
             color: colors[Math.floor(Math.random() * colors.length)],
-            size: Math.random() * 10 + 5
+            size: Math.random() * 8 + 4,
+            rotation: Math.random() * 360,
+            rotationSpeed: Math.random() * 10 - 5
         });
     }
 
     function animateConfetti() {
         // Stop loop if we went back to setup
-        if(setupScreen.classList.contains('flex') === false && gameScreen.classList.contains('flex') === false) {
-             // If we are in setup mode, check if setup is active
-        }
-        
         if(setupScreen.classList.contains('flex')) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             return; 
@@ -312,18 +310,22 @@ function startConfetti() {
         particles.forEach(p => {
             p.x += p.vx;
             p.y += p.vy;
+            p.rotation += p.rotationSpeed;
             
             if (p.y < canvas.height) activeParticles = true;
             else if (p.y >= canvas.height && availableNumbers.length === 0) {
                  // Loop confetti if game is done
-                 p.y = -10;
+                 p.y = -20;
+                 p.x = Math.random() * canvas.width;
                  activeParticles = true;
             }
 
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation * Math.PI / 180);
             ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.rect(p.x, p.y, p.size, p.size);
-            ctx.fill();
+            ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+            ctx.restore();
         });
 
         requestAnimationFrame(animateConfetti);
