@@ -21,6 +21,11 @@ const historyList = document.getElementById('history-list');
 
 window.addEventListener('DOMContentLoaded', () => {
     loadState();
+    
+    // Auto-select "Total Players" input on focus
+    inputPlayers.addEventListener('focus', () => {
+        inputPlayers.select();
+    });
 });
 
 // --- Core Functions ---
@@ -137,7 +142,7 @@ function drawNumber() {
         
         isAnimating = false;
 
-    }, 800);
+    }, 400);
 }
 
 function updateRemaining() {
@@ -166,6 +171,17 @@ function renderHistoryItem(item) {
         item.name = newName; // Update data model
         saveState(); // Persist changes
     };
+
+    nameSpan.addEventListener('focus', () => {
+        // Use a small timeout to ensure it works across all browsers
+        setTimeout(() => {
+            const range = document.createRange();
+            range.selectNodeContents(nameSpan);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }, 0);
+    });
 
     nameSpan.addEventListener('blur', saveNameChange);
     nameSpan.addEventListener('keydown', (e) => {
