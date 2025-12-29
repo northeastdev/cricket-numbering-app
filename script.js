@@ -1,3 +1,91 @@
+// --- PWA Service Worker Registration ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then((registration) => {
+                console.log('ServiceWorker registration successful:', registration.scope);
+                
+                // Handle updates
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // New content is available, show update prompt if desired
+                            console.log('New content available, please refresh.');
+                        }
+                    });
+                });
+            })
+            .catch((error) => {
+                console.log('ServiceWorker registration failed:', error);
+            });
+    });
+}
+
+// --- PWA Install Prompt ---
+let deferredPrompt;
+const installPromptContainer = document.createElement('div');
+installPromptContainer.id = 'install-prompt';
+installPromptContainer.className = 'install-prompt hidden';
+installPromptContainer.innerHTML = `
+    <div class="glass rounded-2xl p-4 flex items-center gap-4 shadow-2xl border border-white/10">
+        <div class="bg-accent-start/20 p-3 rounded-xl">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+        </div>
+        <div class="flex-1">
+            <p class="text-white font-semibold text-sm">Install App</p>
+            <p class="text-text-dim text-xs">Add to your home screen</p>
+        </div>
+        <button id="install-btn" class="bg-gradient-to-r from-accent-start to-accent-mid text-black font-bold py-2 px-4 rounded-xl text-sm">
+            Install
+        </button>
+        <button id="dismiss-install" class="text-text-dim hover:text-white p-1">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+`;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // Show custom install prompt after a delay
+    setTimeout(() => {
+        document.body.appendChild(installPromptContainer);
+        installPromptContainer.classList.remove('hidden');
+    }, 3000);
+});
+
+document.addEventListener('click', (e) => {
+    if (e.target.id === 'install-btn') {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                }
+                deferredPrompt = null;
+                installPromptContainer.classList.add('hidden');
+            });
+        }
+    }
+    if (e.target.id === 'dismiss-install' || e.target.closest('#dismiss-install')) {
+        installPromptContainer.classList.add('hidden');
+    }
+});
+
+window.addEventListener('appinstalled', () => {
+    console.log('PWA was installed');
+    installPromptContainer.classList.add('hidden');
+});
+
 // --- Game State ---
 let availableNumbers = [];
 let totalPlayers = 0;
@@ -6,6 +94,7 @@ let isAnimating = false;
 let historyStore = []; 
 
 const STORAGE_KEY = 'cricket_draw_state_v2';
+
 
 // --- DOM Elements ---
 const setupScreen = document.getElementById('setup-screen');
